@@ -1,0 +1,30 @@
+{
+  "_comment": "A profile that uses rate normalisation: the loan app quotes a flat rate with an up-front fee, which is normalised to a true reducing-balance APR before anything is computed.",
+  "netIncome": 60000,
+  "incomeHistory": [],
+  "rent": 12000,
+  "coreExpenses": 28000,
+  "liquidReserves": 40000,
+  "earners": 1,
+  "dependents": 2,
+  "familyHelp": false,
+  "debts": [
+    {
+      "name": "Loan app (24% flat, 6 months, 10% fee)",
+      "type": "loanapp",
+      "secured": false,
+      "balance": 20000,
+      "minPayment": 3733,
+      "quote": { "basis": "flat", "rate": 24, "months": 6, "fee": 2000 }
+    },
+    {
+      "name": "Credit card",
+      "type": "revolving",
+      "secured": false,
+      "balance": 65000,
+      "minPayment": 3500,
+      "apr": 42,
+      "creditLimit": 100000
+    }
+  ]
+}

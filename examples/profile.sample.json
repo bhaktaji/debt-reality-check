@@ -1,0 +1,21 @@
+{
+  "netIncome": 160000,
+  "incomeHistory": [148000, 160000, 152000],
+  "rent": 0,
+  "coreExpenses": 55000,
+  "liquidReserves": 300000,
+  "earners": 1,
+  "dependents": 0,
+  "familyHelp": false,
+  "debts": [
+    {
+      "name": "Business loan",
+      "type": "installment",
+      "secured": true,
+      "balance": 1200000,
+      "minPayment": 77000,
+      "apr": 14,
+      "creditLimit": null
+    }
+  ]
+}
