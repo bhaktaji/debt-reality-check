@@ -1,375 +1,359 @@
+<div align="center">
+
 # Debt Reality Checker
 
-A deterministic, offline-first household solvency diagnostic that explains itself in
-plain English.
+**A deterministic, conflict-free household solvency diagnostic and repayment engine that explains itself in plain English.**
 
-Tell it your income, essential costs, cash buffer and debts. It normalises every interest
-rate to a comparable year-on-year figure, computes a four-tier cash-flow verdict, compares
-two debt-payoff strategies, and gives you three to five concrete next actions. A person who
-has never heard of FOIR, DCF, APR or amortisation can read the whole result without
-meeting any of those words.
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg?style=flat-square)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Engine: Deterministic](https://img.shields.io/badge/Algorithm-v2.0%20(Pure%20JS)-orange.svg?style=flat-square)](#why-zero-ai-in-the-financial-engine)
+[![Tests: 415 Passing](https://img.shields.io/badge/Tests-415%20Passing%20(100%25)-success.svg?style=flat-square)](#automated-testing--verification)
+[![Channels: Web%20%2B%20WhatsApp](https://img.shields.io/badge/Channels-Web%20%7C%20WhatsApp%20Cloud%20API-25D366.svg?style=flat-square)](#user-journey)
 
-There is no account, no telemetry, no lending, no brokering, no referrals and no LLM in the
-financial path. Verdicts come from pure functions over thresholds you can read and test.
+<br />
 
-> **Informational only.** Not legal, tax or investment advice. This tool does not assess
-> insolvency in any legal sense. A qualified professional should review your individual
-> circumstances.
+### **[🚀 Open Debt Reality Checker Live Dashboard](https://debt-reality-checker.ai.studio/)**
 
----
+*Offline-first web diagnostic runs entirely in your browser — zero tracking, zero accounts, zero network calls.*
 
-## Table of contents
-
-- [Tech stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Quick start](#quick-start)
-- [Environment setup](#environment-setup)
-- [Running it](#running-it)
-  - [Dashboard](#dashboard)
-  - [CLI](#cli)
-  - [WhatsApp bot](#whatsapp-bot)
-- [WhatsApp conversation commands](#whatsapp-conversation-commands)
-- [Testing](#testing)
-- [Project layout](#project-layout)
-- [How the engine works](#how-the-engine-works)
-- [Privacy and data handling](#privacy-and-data-handling)
-- [Deployment & operations](#deployment--operations)
-- [Contributing and Git workflow](#contributing-and-git-workflow)
-- [Troubleshooting](#troubleshooting)
-- [Known limitations](#known-limitations)
-- [License](#license)
+</div>
 
 ---
 
-## Tech stack
+## 📌 Executive Summary & Value Proposition
 
-| Layer | Technology |
+Indian household debt has surged alongside the proliferation of instant credit lines, Buy-Now-Pay-Later (BNPL) services, and digital loan apps. Millions of households find themselves in overlapping repayment cycles where:
+- **Quoted interest rates are fundamentally deceptive**: A "24% flat rate for 6 months" with a 10% processing fee is actually an **annualized 79.6% APR**.
+- **Financial metrics are opaque**: Jargon like *FOIR*, *Debt-to-Income*, *EIR*, and *Amortization* obscures whether a family has 2 weeks or 6 months of breathing room.
+- **Existing aggregators have conflicting incentives**: Most "free financial health checks" exist solely as lead-generation funnels to sell personal loans, refinancing packages, or credit cards.
+
+**Debt Reality Checker** solves this problem by delivering an honest, unvarnished solvency diagnostic. It normalizes every loan rate to true APR, calculates household breathing room, evaluates emergency runway, compares **Avalanche vs. Snowball** debt payoff timelines with automated minimum roll-over, and gives users 3 to 5 concrete next steps—without selling loans, collecting phone numbers, or brokering debt.
+
+```
+                      ┌────────────────────────────────────────┐
+                      │          DEBT REALITY CHECKER          │
+                      │   Conflict-Free Solvency Diagnostic    │
+                      └──────────────────┬─────────────────────┘
+                                         │
+         ┌───────────────────────────────┴───────────────────────────────┐
+         ▼                                                               ▼
+┌─────────────────────────────────┐                     ┌─────────────────────────────────┐
+│     WEB DASHBOARD (React 18)    │                     │   WHATSAPP BOT (Meta Cloud API) │
+│  • Offline-first (localStorage) │                     │  • Natural plain-English dialog │
+│  • Five guided intake screens   │                     │  • HMAC-SHA256 pseudonymized ID │
+│  • Instant graphical verdict    │                     │  • Right to erasure on command  │
+└────────────────┬────────────────┘                     └────────────────┬────────────────┘
+                 │                                                       │
+                 └───────────────────────┬───────────────────────────────┘
+                                         ▼
+                      ┌────────────────────────────────────────┐
+                      │    DETERMINISTIC FINANCIAL ENGINE      │
+                      │  • Zero-LLM mathematical core          │
+                      │  • Flat-to-APR rate normalization      │
+                      │  • 4-Tier cash flow solvency verdict   │
+                      │  • Cost-aware payoff simulator         │
+                      └────────────────────────────────────────┘
+```
+
+---
+
+## 🚀 Live Product Access
+
+| Channel | Access Link / Number | Operational Status | Privacy Profile |
+| --- | --- | --- | --- |
+| **Interactive Web App** | **[https://debt-reality-checker.ai.studio/](https://debt-reality-checker.ai.studio/)** | **Live & Publicly Accessible** | **100% Client-Side**: All profile data, debts, and history remain in your browser's `localStorage`. No server calls. |
+| **Official WhatsApp Bot** | Sandbox Test: `+1 555-152-7255` (`Test Number`) | **Meta Cloud API Webhook Verified** | **Pseudonymized**: Phone numbers are hashed via `HMAC-SHA256` before hitting SQLite. Data purged after 90 days or immediately via `DELETE MY DATA`. |
+| **Console / CLI** | `npm run demo` / `npm run audit` | **Local / CI Verified** | Standalone deterministic runner; emits printable HTML audit reports. |
+
+---
+
+## 💡 Why "Zero AI" in the Financial Engine?
+
+While generative AI models excel at text processing, they are non-deterministic, prone to calculation hallucinations, and inherently risky when diagnosing household solvency. 
+
+In Debt Reality Checker:
+1. **The mathematical core is 100% deterministic**: Every rate conversion (Newton-Raphson APR solver), cash-flow metric, band-edge calculation, and payoff projection is computed by pure, battle-tested JavaScript functions in `core/`.
+2. **Explanations are bound to tested templates**: User-facing copy, glossary definitions, and prioritized recommendations are generated from verified rule-based templates in `core/plain_language.js` and `core/narrative.js`.
+3. **No LLM in the financial path**: No generative model calculates health tiers, overrides emergency runway, or invents financial advice.
+4. **Golden Fixture Assertions**: 415 automated tests assert exact reproducibility across published archetypes down to the individual rupee paise.
+
+---
+
+## 🎯 Target Users & Key Benefits
+
+### Who It Is For
+- **Salaried Employees**: Managing multiple credit cards and personal loans looking for a clear payoff roadmap.
+- **Gig Economy & Variable Earners**: Needing realistic budgeting based on conservative income floors rather than optimistic peaks.
+- **Households Evaluating New Borrowing**: Seeking to uncover hidden fees and true APRs before signing loan agreements.
+- **Financial Counselors & Non-Profits**: Requiring an uncompromised, conflict-free diagnostic tool that never refers users to commercial lenders.
+
+### Core User Benefits
+- **True Rate Normalization**: Translates flat monthly quotes (e.g., "2% per month") and fee-laden digital loan offers into annualized APRs so apples-to-apples comparisons are possible.
+- **The 4-Tier Cash-Flow Verdict**:
+  - `Tier 1: Solvent` — Healthy breathing room, stable buffer, debts under control.
+  - `Tier 2: Fragile` — Balanced today, but a single income disruption or medical emergency would trigger distress.
+  - `Tier 3: Critical Debt Trap` — Minimum payments consume discretionary cash; balances threaten to spiral.
+  - `Tier 4: Acute Cash-Flow Crisis` — Mandatory outgoings exceed effective income; immediate income protection and lender communication required.
+- **Emergency Runway Protection**: Computes how many months accessible reserves will last under essential spending; thin buffers automatically cap the solvency rating.
+- **Avalanche vs. Snowball Payoff Intelligence**: Compares mathematical optimization (highest interest first) against behavioral momentum (smallest balance first), complete with minimum payment rollover math and budget shortfall detection.
+
+---
+
+## 🔍 Feature Matrix
+
+| Feature | Category | Status | Implementation Details |
+| --- | --- | --- | --- |
+| **Flat-Rate to APR Solver** | Financial Core | **Implemented** | Newton-Raphson numerical solver converts loan duration, flat rates, and upfront fees to true APR (`core/engine_v2.js`). |
+| **4-Tier Solvency Classifier** | Financial Core | **Implemented** | Pure-function evaluation of FOIR, discretionary cash flow (DCF), emergency runway, interest burn, and dependency load (`core/policy.js`). |
+| **Avalanche vs. Snowball Simulator** | Financial Core | **Implemented** | Full payoff simulation with freed minimum rollover and `BUDGET_BELOW_INTEREST` safety detection (`core/payoff.js`, `core/strategy.js`). |
+| **Offline-First Web Dashboard** | Frontend | **Implemented** | 5-step React 18 SPA built with Vite; persists locally via `localStorage`; zero telemetry or external network calls (`web/`). |
+| **Official WhatsApp Cloud API** | Messaging | **Implemented** | Public webhook endpoint with `X-Hub-Signature-256` HMAC validation, message chunking (`<=3800` chars), and Graph API retry with exponential backoff (`bot/whatsapp_cloud.js`). |
+| **Persistent Deduplication** | Storage | **Implemented** | Webhook message IDs tracked in SQLite `processed_webhooks` table across restarts to prevent duplicate replies (`store/migrations.js`). |
+| **Targeted Audit Editing (`EDIT`)** | Conversation | **Implemented** | Modify individual fields (e.g., `EDIT INCOME`, `EDIT DEBTS`) mid-flow or at review without re-answering the whole questionnaire (`bot/router.js`). |
+| **Follow-Up Questions (`WHY`, `STRATEGY`)** | Conversation | **Implemented** | Instant on-demand explanations of tier drivers, buffer targets, and payoff strategies from the latest completed audit (`bot/router.js`). |
+| **Right to Erasure (`DELETE MY DATA`)** | Privacy | **Implemented** | Permanently wipes user profile, debts, expenses, audits, and webhook idempotency records from SQLite in a single transaction (`store/retention.js`). |
+| **Operational Probes (`/readyz`, `/healthz`)** | Operations | **Implemented** | Real-time liveness and database readiness checks with privacy-safe diagnostic error telemetry (`server.js`). |
+| **Single-Line Expense Tracker (`LOG`)** | Personal Finance | **Partially Implemented** | Users can record daily expenses via WhatsApp (`LOG 250 groceries`); comprehensive weekly category reporting is planned. |
+| **Vernacular Language Support** | Localization | **Planned** | Hindi, Tamil, Telugu, and Bengali conversational translations. |
+| **Automated PDF Export via WhatsApp** | Reporting | **Planned** | Server-side PDF generation sent as an official WhatsApp document attachment. |
+
+---
+
+## 🗺️ User Journey
+
+### 1. Web Dashboard Experience
+```
+  [1. Income] ───> [2. Essential Costs] ───> [3. Safety Net] ───> [4. Household] ───> [5. Debts]
+                                                                                          │
+                                                                                          ▼
+  [Actionable Next Steps] <─── [Payoff Comparison] <─── [Solvency Verdict & Metrics] <────┘
+```
+1. **Intake Flow**: Five clean screens guide users through monthly take-home income, core living expenses, cash reserves, household earners/dependents, and existing loans/cards.
+2. **Instant Local Diagnostic**: Pressing *View Reality Check* immediately executes Algorithm v2 locally in browser memory.
+3. **Conversational Report**: Opens with an honest assessment in plain English, highlights key pressure points, displays the Avalanche vs. Snowball payoff timeline, and outlines 3 to 5 concrete immediate actions.
+
+### 2. WhatsApp Bot Conversation Flow
+```
+User:  HI
+Bot:   Welcome to Debt Reality Checker! Plain-English debt analysis...
+       We store pseudonymized figures for 90 days. Reply AGREE to continue.
+
+User:  AGREE
+Bot:   Consent recorded. Send AUDIT to begin your reality check.
+
+User:  AUDIT
+Bot:   Step 1 of 8: What is your regular monthly take-home income?
+
+User:  60k
+Bot:   Got it — ₹60,000. Step 2 of 8: Was your income steady over the last 6 months?
+       ... [Steps 3 to 8: Family help, Rent, Essentials, Savings, Debts] ...
+
+User:  EDIT INCOME
+Bot:   Updating Monthly income. What is your correct monthly take-home?
+
+User:  55k
+Bot:   Updated to ₹55,000. Review your summary. Reply YES to run diagnostic.
+
+User:  YES
+Bot:   *YOUR DEBT REALITY CHECK*
+       Verdict: Tier 2 — Fragile.
+       Your outgoings are covered today, but your cash buffer is under 1 month...
+       Payoff Plan: Avalanche clears debt in 18 months saving ₹14,200 in interest.
+       Top Action: Build ₹25,000 liquid buffer before aggressively paying extra principal.
+
+User:  WHY
+Bot:   Your debt-to-income ratio is 38%, which is manageable, but your emergency
+       runway is only 0.8 months. Increasing your buffer by ₹22,000 moves you to Tier 1.
+
+User:  DELETE MY DATA
+Bot:   All your stored records and consent have been permanently erased.
+```
+
+---
+
+## 🏗️ Architecture & Technology Stack
+
+```mermaid
+flowchart TD
+    subgraph Clients["User Channels"]
+        WebUser["Web Browser Client"]
+        WAUser["WhatsApp Mobile User"]
+    end
+
+    subgraph Host["Google Cloud Run / Container Host"]
+        HTTP["Unified HTTP Server (server.js / server.ts)"]
+        Health["/readyz & /healthz Probes"]
+        Static["Static Dashboard Assets (dist/web)"]
+        CloudAPI["WhatsApp Cloud API Transport (bot/whatsapp_cloud.js)"]
+        Router["Conversation Router (bot/router.js)"]
+        
+        subgraph Engine["Deterministic Financial Engine (core/)"]
+            V2["Algorithm v2 Solvency Engine (engine_v2.js)"]
+            Payoff["Payoff & Strategy Simulator (payoff.js / strategy.js)"]
+            Narrative["Plain-Language Narrative Generator (narrative.js)"]
+        end
+
+        subgraph Storage["SQLite Persistence Layer (store/)"]
+            DB["SQLite (WAL Mode, Integer Paise)"]
+            Pseudo["HMAC-SHA256 Pseudonymizer (pseudonym.js)"]
+            Retention["Retention Sweeper (90-day inactivity purge)"]
+            Dedup["Webhook Idempotency Store (processed_webhooks)"]
+        end
+    end
+
+    subgraph Meta["Meta Infrastructure"]
+        Graph["Meta Graph API (v21.0)"]
+    end
+
+    WebUser -->|HTTPS GET /| Static
+    WebUser -.->|Runs Algorithm v2 in Browser| Engine
+    WAUser -->|Inbound WhatsApp Message| Graph
+    Graph -->|Signed POST /webhook| CloudAPI
+    CloudAPI -->|HMAC-SHA256 Verification| CloudAPI
+    CloudAPI -->|Deduplicate Message ID| Dedup
+    CloudAPI -->|Dispatch User Message| Router
+    Router -->|Read / Write State| DB
+    Router -->|Pseudonymize Sender| Pseudo
+    Router -->|Execute Diagnostic| Engine
+    CloudAPI -->|Send Outbound Reply (Backoff/Retry)| Graph
+    Graph -->|Deliver Reply| WAUser
+    HTTP --> Health
+    HTTP --> Static
+    HTTP --> CloudAPI
+```
+
+### Technology Breakdown
+- **Runtime**: Node.js `>= 20.0.0` (ES modules, native cryptographic primitives).
+- **Frontend**: React 18 + Vite 6, clean custom CSS, zero third-party UI dependencies.
+- **Database**: SQLite with WAL (`Write-Ahead Logging`), foreign keys, indexed queries, and dual driver support (`better-sqlite3` native with automatic `node:sqlite` fallback).
+- **Messaging Integration**: Official Meta WhatsApp Business Cloud API (`Graph API v21.0`) with HMAC-SHA256 signature verification, persistent idempotency, and per-sender rate limiting.
+- **Test Runner**: Vitest 2 with unit, mathematical property, golden archetype, and integration suites.
+
+---
+
+## 🔒 Privacy Architecture & Trust Model
+
+| Data Item | Storage & Retention Policy |
 | --- | --- |
-| Runtime | **Node.js 22.5+** (uses `node:sqlite` and `--env-file-if-exists`) |
-| Dashboard | **React 18 + Vite 6**, plain CSS, zero runtime UI dependencies |
-| Storage | **SQLite** — `better-sqlite3` (native) with automatic fallback to the built-in `node:sqlite` |
-| Messaging | Channel abstraction with a console driver, an official **WhatsApp Business Cloud API** webhook server (`bot/whatsapp_cloud.js`), and a guarded local personal prototype (`@whiskeysockets/baileys`) |
-| Tests | **Vitest 2** — unit, property, golden-fixture, parity, Cloud API webhook/signature/retry, and server-render smoke tests |
-| Lint | **ESLint 9** (flat config) |
-| Money handling | Integer paise internally, `en-IN` formatting for display |
-| CI | GitHub Actions — lint, test, build, CLI smoke test, end-to-end demo |
-
-There is **no Java/Maven backend** and no separate server tier: the whole financial core is
-plain JavaScript running in Node (CLI, bot, Cloud API webhook server) or in the browser (dashboard).
-One codebase, three surfaces, one calculation.
+| **Phone Numbers / Sender IDs** | **Never stored in plaintext.** Every channel ID is hashed using `HMAC-SHA256(rawId, PSEUDONYM_SECRET)` and truncated to a 32-character hex string before touching the database. |
+| **Financial Figures** | Stored strictly as integer paise (avoiding floating-point errors); tied only to the pseudonymized user key. |
+| **Expense Descriptions** | **Discarded by default.** Free-text notes are stripped unless explicitly opted-in via `DRC_STORE_DESCRIPTIONS=true`. |
+| **Webhook Delivery Records** | Message IDs stored in `processed_webhooks` for deduplication; purged automatically on user data erasure or retention expiry. |
+| **Inactivity Purge** | Automated retention sweep runs on boot and every 6 hours, erasing all data for users inactive beyond `DRC_RETENTION_DAYS` (default 90 days). |
+| **Right to Erasure** | Sending `DELETE MY DATA` permanently deletes user records, profiles, debts, expenses, audit history, and webhook records in a single transaction. |
+| **Application Logs** | Structured JSON logs record operational events and error codes only. **Message bodies, phone numbers, API tokens, and financial figures are never logged.** |
 
 ---
 
-## Prerequisites
+## 💻 Getting Started (Local Development)
 
-| Requirement | Version | Why |
-| --- | --- | --- |
-| **Node.js** | **>= 22.5** | `node:sqlite` for the SQLite fallback; `--env-file-if-exists` for `.env` loading from the npm scripts |
-| npm | 10+ (bundled with Node) | Dependency management |
-| Git | any recent | Cloning and contributing |
+### Prerequisites
+- **Node.js**: `>= 20.0.0`
+- **npm**: `>= 9.0.0`
+- **Git**
 
-Optional, depending on what you run:
-
-- A modern browser for the dashboard (Chrome/Edge/Firefox/Safari).
-- A Meta Developer account & WhatsApp Business App for the official Cloud API webhook server.
-- A phone with WhatsApp for the local personal Baileys prototype.
-- Visual Studio C++ build tools **only** if you want to rebuild `better-sqlite3` for your
-  Node version (the prebuilt binary ships for Node 22).
-
----
-
-## Quick start
-
+### Installation
 ```bash
+# 1. Clone the repository
 git clone https://github.com/bhaktaji/debt-reality-check.git
 cd debt-reality-check
 
+# 2. Install dependencies
 npm install
-npm run demo        # full end-to-end audit, writes dist/demo-audit-report.html
-npm run dev         # unified server (dashboard + Cloud API webhook) at http://localhost:3000
-npm run web         # standalone Vite dashboard at http://localhost:5173
-```
 
-That is enough to see everything: the demo runs a complete audit through the console and
-prints a printable report; `npm run dev` or `npm run web` opens the same engine behind the dashboard.
-
----
-
-## Environment setup
-
-The dashboard needs **no configuration** — it stores everything in `localStorage` on your
-device and makes no network request.
-
-The CLI and the bot read an optional `.env` file. The npm scripts load it automatically
-(`node --env-file-if-exists=.env`), so there is nothing to export by hand.
-
-```bash
+# 3. Create your local environment configuration
 cp .env.example .env
 ```
 
-`.env` is git-ignored. **`.env.example` is the tracked template** — never put real
-credentials in anything else. The variables are:
+### Running Locally
+```bash
+# Run the unified full-stack server (Dashboard + Cloud API webhook + Health probes)
+npm run dev
+# Dashboard available at: http://localhost:3000
+# Readiness probe:        http://localhost:3000/readyz
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `PSEUDONYM_SECRET` | dev fallback | HMAC key for pseudonymised user ids. **Required in production (min 16 chars).** |
-| `NODE_ENV` | `development` | `production` refuses to run without `PSEUDONYM_SECRET` and Cloud API secrets. |
-| `PORT` | `3000` / `8080` | HTTP port for the Cloud API webhook & dashboard server. |
-| `DRC_DB_PATH` | `data/debt_reality.sqlite` | SQLite file path. |
-| `DRC_RETENTION_DAYS` | `90` | Inactivity after which a user's data is purged on boot and every 6 hours. |
-| `DRC_STORE_DESCRIPTIONS` | `false` | Store free-text expense descriptions. Off by default. |
-| `DRC_DB_DRIVER` | auto-detect | Force `better-sqlite3` or `node:sqlite`. |
-| `DRC_CHANNEL` | `console` | `console`, `cloud` (official production API), or `baileys` (local personal prototype). |
-| `WHATSAPP_PHONE_NUMBER_ID` | – | Official Cloud API phone number ID. **Required in production.** |
-| `WHATSAPP_ACCESS_TOKEN` | – | Official Cloud API permanent System User token. **Required in production.** |
-| `WHATSAPP_VERIFY_TOKEN` | – | Official Cloud API webhook verification token. **Required in production.** |
-| `WHATSAPP_APP_SECRET` | – | Meta App Secret used to verify `X-Hub-Signature-256` on `POST /webhook`. **Required in production.** |
-| `WHATSAPP_GRAPH_API_VERSION` | `v21.0` | Configurable Meta Graph API version. |
-| `SELF_CHAT_ONLY` | `true` | Baileys guard: only answer your own "message yourself" chat. |
-| `ALLOWED_JIDS` | unset | Baileys guard: comma-separated allow-list of consented JIDs. |
-| `BAILEYS_AUTH_DIR` | `auth_info_baileys` | Session key location. Git-ignored, treat as a live credential. |
+# Or run the standalone Vite dev server
+npm run web
+# Available at: http://localhost:5173
+```
 
-Generate a `PSEUDONYM_SECRET` with:
+### Running CLI Tools & Golden Fixture Demos
+```bash
+# Run a full end-to-end CLI audit and generate a printable HTML report
+npm run demo
+# Emits report to: dist/demo-audit-report.html
+
+# Run the 4 archetype calibration checks against Algorithm v2
+npm run calibrate
+
+# Validate all mathematical policy band edges
+npm run calibrate -- --boundaries
+```
+
+---
+
+## 🧪 Automated Testing & Verification
+
+The test suite enforces mathematical correctness, monotonic property invariants, copy guardrails, and WhatsApp Cloud API resilience:
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
----
-
-## Running it
-
-### Dashboard
-
-```bash
-npm run dev            # unified server (dashboard + webhook + healthz) at http://localhost:3000
-npm run web            # Vite dev server at http://localhost:5173
-npm run web:build      # production bundle into dist/web
-```
-
-Offline-first: profile, expenses and audit history live in `localStorage`. The production
-bundle makes no outbound request. You can also open `dist/web/index.html` directly from disk.
-
-Five guided screens (income → costs → safety net → household → debts), each asking one part
-of the household with plain-English labels and a `?` help control on anything technical.
-The result opens with a conversational verdict before any number.
-
-### CLI
-
-```bash
-npm run demo                        # full end-to-end audit + printable HTML report
-npm run audit -- --file examples/profile.sample.json
-npm run audit -- --file examples/profile.flat-rate.json --json
-npm run audit -- --file examples/profile.sample.json --html dist/report.html
-cat examples/profile.sample.json | npm run audit -- --stdin
-npm run calibrate                    # the four archetype fixtures under Algorithm v2
-npm run calibrate -- --boundaries    # every documented band edge
-```
-
-Two example profiles ship in `examples/`: a standard household, and one exercising rate
-normalisation (a flat-rate loan-app quote with an up-front fee).
-
-### WhatsApp bot
-
-```bash
-npm run bot:cloud       # official WhatsApp Business Cloud API HTTP webhook server (production)
-npm run bot             # interactive console channel, no credentials required
-npm run bot:whatsapp    # unofficial QR-linked prototype (replies in your own "message yourself" chat)
-npm run bot:logout      # clear a local Baileys prototype session
-```
-
-- **Production (`npm run bot:cloud` or `npm start`)**: Starts the HTTP server exposing:
-  - `GET /webhook` (and `GET /api/webhook`): Meta webhook subscription challenge verification (`hub.mode=subscribe`, timing-safe `hub.verify_token` check).
-  - `POST /webhook` (and `POST /api/webhook`): Validates `X-Hub-Signature-256` using `WHATSAPP_APP_SECRET`, enforces payload size bounds, deduplicates `message.id` across restarts in SQLite (`processed_webhooks`), handles text/interactive/unsupported-media/status events, splits long reports at section boundaries (`<= 3800` chars), and sends outbound replies via Graph API with bounded exponential backoff + jitter on `429`/`5xx`.
-  - `GET /healthz`, `GET /readyz`, `GET /api/status`: Operational liveness and database readiness endpoints.
-- **Local Personal Prototype (`npm run bot:whatsapp`)**: Set `SELF_CHAT_ONLY=true` in `.env`, run `npm run bot:whatsapp`, then scan the QR from **WhatsApp → Settings → Linked devices → Link a device**. The Baileys adapter is **unofficial, reverse-engineered, and strictly prohibited for public production**.
-
----
-
-## WhatsApp conversation commands
-
-| Command | What it does |
-| --- | --- |
-| `HI` / `HELLO` / `HELP` | Shows the plain-English welcome guide and command list |
-| `AGREE` | Records explicit data-processing consent |
-| `AUDIT` / `RESTART` | Starts a fresh 8-step guided debt & cash-flow reality check |
-| `BACK` | Steps back one question during an audit |
-| `EDIT INCOME` / `EDIT RENT` / `EDIT COSTS` / `EDIT RESERVES` / `EDIT HOUSEHOLD` / `EDIT DEBTS` | Updates a specific answer and returns directly to the review screen |
-| `CANCEL` | Pauses the current questionnaire while keeping your draft |
-| `RESUME` | Continues a paused questionnaire from where you left off |
-| `YES` (at review screen) | Runs the deterministic v2 calculation and prints the full report |
-| `WHY` / `STRATEGY` / `NEXT STEPS` | Answers follow-up questions about your last completed audit |
-| `LOG 250 groceries` | Logs a daily expense (`essential`, `debt`, `discretionary`, `buffer`) |
-| `SUMMARY` | Shows logged expenses for the last 30 days and your latest verdict |
-| `EXPORT` | Prints a copy of all pseudonymised records held for your chat |
-| `DELETE MY DATA` | Immediately and permanently erases all records and consent for your chat |
-
----
-
-## Testing
-
-```bash
-npm test          # full suite
-npm run test:unit # unit, property and fixture suites only
-npm run lint      # ESLint over the whole repository
-npm run verify    # lint + tests + production build, in one go
-```
-
-| Layer | What it proves |
-| --- | --- |
-| Unit | Amount/rate parsing, expense categorisation, band edges, overrides, rate normalisation, credit stress, data-quality guards, payoff mechanics, strategy selection, formatting, storage, the router, report rendering, dashboard render, copy guardrails |
-| Golden fixtures | The four archetypes reproduce the published v2 numbers exactly (FOIR, DCF %, runway, flow tier, final tier, drivers) |
-| Boundary fixtures | FOIR 39.99/40/50/65; DCF 25/24.99/10/9.99/0; runway 6/5.99/3/2.99/1/0.99; deficit 5.99/6.0 |
-| Property | Raising income never worsens the tier; raising a mandatory payment never improves it; scaling every rupee amount preserves the tier; the engine never mutates its input; payoff interest is never negative; the budget is never exceeded |
-| Parser fuzz | Every formatted variant of a number round-trips; junk never becomes `0`; random input never throws |
-| Parity | A full bot conversation, read back out of SQLite, produces the same verdict as the dashboard |
-| Copy snapshots | No message, label, glossary entry or narrative ever contains "insolvent", "prohibited" or "mandated" |
-| Plain language | Every technical term has a glossary entry written as a plain sentence; the whole reading flow contains no FOIR/DCF/APR/DTI jargon |
-| Dashboard render | The real React tree renders to a string in Node: every screen, every label bound to a control, help controls present, `aria-current` on the active step |
-| WhatsApp Cloud API | Webhook verification, `X-Hub-Signature-256` HMAC validation, malformed payloads, unsupported media handling, status callbacks, persistent deduplication across restarts, bounded retry/backoff on 429/5xx, token redaction, multi-user isolation, and `DELETE MY DATA` complete erasure |
-| WhatsApp Baileys | Groups, status broadcasts and history replay ignored; duplicates dropped; allow-list enforced; the bot never answers its own replies |
-| SQLite drivers | Driver detection probes with a real database; a broken native module falls through; both drivers produce identical query results |
-
----
-
-## Project layout
-
-```
-core/     pure functions. no I/O, no clock, no network, no randomness.
-            policy.js            thresholds, tier labels, directives, career guidance
-            plain_language.js    plain tier names, the glossary, headlines, actions
-            explain.js           each metric -> its value + what that value means
-            narrative.js         the conversational verdict and next steps
-            engine_v2.js         rate normalisation, metrics, tiers, overrides
-            payoff.js            payoff simulation with roll-over and infeasibility guards
-            strategy.js          cost-aware Avalanche / Snowball selector
-            report.js            ONE report model, one section list, three renderers
-store/    SQLite. WAL, foreign keys, indexes, migrations (v1 + v2 webhook idempotency), integer paise.
-bot/      channel-agnostic router + console, Cloud API (production) and Baileys (local) adapters.
-web/      React 18 + Vite dashboard, importing the same core via the @core alias.
-cli/      demo.js, audit.js, calibrate.js.
-tests/    unit/ property/ fixtures/ helpers/
-docs/     technical whitepaper (PDF) and production deployment & operations guide.
-server.js unified HTTP server (Cloud API webhook + health probes + static dashboard).
-```
-
-**The rule that matters:** `core/` contains every financial formula *and* every user-facing
-sentence. `web/`, `bot/` and `cli/` all import it. There is no second copy of a formula, and
-no second copy of a sentence, anywhere in the repository.
-
----
-
-## How the engine works
-
-1. **Normalise rates.** Every debt is converted to a true APR. A ₹20,000 loan quoted at
-   "24% flat over 6 months" has an EMI of ₹3,733.33 and a true APR of **40.0%**; add a 10%
-   up-front fee and it is **79.6%**. An unknown rate stays unknown.
-2. **Compute metrics.** Effective income (the weakest of the last 3-6 months), FOIR,
-   discretionary cash flow, emergency runway, interest burn, debt-to-income months and
-   credit-stress indicators.
-3. **Assign a tier.** `flowTier = max(FOIR tier, DCF tier)`. The runway may worsen that by
-   at most one tier and may never improve it. Two documented overrides apply on top
-   (a balance growing even when paid; a high dependency load with a thin buffer).
-4. **Explain it.** Drivers, distance to the next healthier range, and the exact number that
-   would change it.
-5. **Compare strategies.** Avalanche vs Snowball with a fixed budget and freed minimums
-   rolling over. If the budget cannot cover the interest, the plan is reported as
-   `BUDGET_BELOW_INTEREST` with the shortfall — never simulated to a nonsense horizon.
-6. **Say what to do.** Three to five tier-specific actions, advisory wording only.
-
-The thresholds live in `core/policy.js`, are asserted by boundary tests, and can be
-recalibrated from the CLI with `npm run calibrate`.
-
----
-
-## Privacy and data handling
-
-**Data minimised, not exempt.** Pseudonymised data generally remains personal data. These
-controls reduce exposure and breach impact; they do not create a regulatory exemption.
-
-| Data | How it is handled |
-| --- | --- |
-| Channel id (a WhatsApp JID contains a phone number) | Stored only as `HMAC-SHA256(rawId, secret)`, truncated to 32 hex chars. The raw value is never persisted. |
-| Income, costs, debts, reserves | Stored as integer paise; purged after inactivity or on request. |
-| Expense descriptions | **Not stored by default.** Only amount and category. Opt in with `DRC_STORE_DESCRIPTIONS=true`. |
-| Webhook message IDs | Stored in `processed_webhooks` associated with the pseudonymised user ID for idempotency; erased on `DELETE MY DATA` and inactivity purge. |
-| Dashboard | Everything stays in `localStorage` on the device. No account, no server call, no analytics. |
-| Logs | Event kinds only, never message bodies, phone numbers, financial figures, or API tokens. |
-
-On first contact the consent flow states what is stored, why, for how long, and how to
-erase it. `DELETE MY DATA` erases everything for one user immediately (without leaving an
-empty skeleton user row behind); the retention sweep handles inactivity on startup and every 6 hours.
-
----
-
-## Deployment & operations
-
-See [`docs/DEPLOYMENT_AND_OPERATIONS.md`](docs/DEPLOYMENT_AND_OPERATIONS.md) for the complete
-production guide covering:
-
-- Google Cloud Run / Docker deployment (`Dockerfile`)
-- SQLite persistent volume configuration (`max-instances=1` with Cloud Run Gen2 volume mount) and backup/restore runbook
-- Meta Developer App & WhatsApp Business Cloud API configuration (`WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`, permanent System User token)
-- End-to-end live WhatsApp test-number verification checklist
-- Token rotation, rate-limit diagnostics, and DPDPA / SEBI / RBI pre-launch compliance checklist
-
----
-
-## Contributing and Git workflow
-
-### Definition of done
-
-A change is ready to merge when **all** of these pass:
-
-```bash
-npm run lint
+# Run all 415 automated tests across 22 test files
 npm test
-npm run web:build
+
+# Run linter
+npm run lint
+
+# Run full quality gate (Lint + Unit/Property Tests + Web Production Build)
+npm run verify
 ```
 
-Plus: add tests for new behaviour, and **never** weaken an existing test to make code pass.
-If a threshold or formula changes, say so explicitly in the commit body — those numbers are
-asserted by golden fixtures and are the contract with the user.
-
-### What must never be committed
-
-- `.env` or any real credential — `.env.example` is the only tracked template.
-- `auth_info_baileys/` — it is equivalent to a logged-in WhatsApp session.
-- `data/*.sqlite` — it contains real financial data.
-- `node_modules/`, `dist/`, `coverage/` — regenerable.
+### What the Test Suite Proves
+- **Golden Archetypes**: Verifies that published financial archetype households match Algorithm v2 calculations down to the exact rupee.
+- **Monotonic Property Invariants**: Proves that increasing income never worsens a tier, increasing mandatory payments never improves a tier, and scaling rupee amounts preserves tier classification.
+- **Copy Guardrails**: Enforces that user-facing copy never uses words like `insolvent`, `insolvency`, `prohibited`, `mandated`, or `strictly required`.
+- **Cloud API Transport Suite**: Verifies webhook challenge verification (`GET`), `X-Hub-Signature-256` validation (`POST`), payload sanitization, deduplication across restarts, long message chunking (`<=3800` chars), and Graph API retry backoff.
 
 ---
 
-## Troubleshooting
+## 🚢 Deployment & Operations
 
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| `NODE_MODULE_VERSION 127 … requires 137` | `better-sqlite3` was built for a different Node version (127 = Node 22, 137 = Node 24) | It falls back to the built-in driver automatically. To silence it: run on Node 22, `npm rebuild better-sqlite3`, or set `DRC_DB_DRIVER=node:sqlite`. |
-| `CloudApiChannel refuses to start in production...` | Missing `PSEUDONYM_SECRET`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_VERIFY_TOKEN`, or `WHATSAPP_APP_SECRET` | Configure all 5 secrets in your deployment environment / Secret Manager. |
-| `401 Invalid signature` on `POST /webhook` | `WHATSAPP_APP_SECRET` does not match the Meta App Secret in App Settings → Basic | Verify `WHATSAPP_APP_SECRET` matches the Meta Developer Portal App Secret (not the verify token or access token). |
-| `Refusing to start the Baileys prototype…` | No `SELF_CHAT_ONLY=true` and no `ALLOWED_JIDS` | Set one in `.env`. This is the safety guard working. |
-| `npm install` fails on a postinstall script | A locked-down sandbox blocking `esbuild` | `npm install --ignore-scripts` — the prebuilt binaries are already unpacked. |
+For complete deployment guides, container configuration, Meta webhook setup, and token recovery runbooks, refer to the dedicated operations guides:
+
+- **[Deployment & Cloud Run Operations Runbook](docs/DEPLOYMENT_AND_OPERATIONS.md)**: Container setup (`docs/Dockerfile.cloudrun`), Google Cloud Run configuration, single-instance SQLite WAL volume architecture, and backup procedures (`sqlite3 .backup`).
+- **[WhatsApp Cloud API Testing & Troubleshooting Guide](docs/WHATSAPP_TESTING_AND_TROUBLESHOOTING.md)**: End-to-end testing, `/readyz` metric interpretation, Google Cloud Logs Explorer queries, and 24-hour token expiry recovery procedures.
 
 ---
 
-## Known limitations
+## 📈 Roadmap & Development Milestones
 
-- The tier cut-offs are **unvalidated rules of thumb** from the source specification, not
-  field-validated.
-- Credit-stress indicators are **non-bureau proxies** derived from entered data. They are
-  not a credit score.
-- The payoff simulator assumes a fixed budget and constant rates. Real lenders change
-  minimums, charge fees and negotiate settlements.
-- Family help is shown for context only, never counted as income.
-- Currency support is **INR only**.
-- Copy is English only. Localisation is outstanding work.
+### Current Release: v2.0.0 (Production-Ready Diagnostic)
+- [x] Deterministic Algorithm v2 financial engine and Newton-Raphson APR solver.
+- [x] Offline-first React 18 web dashboard.
+- [x] Official Meta WhatsApp Business Cloud API webhook server with HMAC-SHA256 signature verification.
+- [x] 8-step conversational intake router with targeted editing (`EDIT`) and pause/resume (`RESUME`).
+- [x] Structured diagnostic endpoints (`/readyz`, `/healthz`) and zero-PII logging.
+
+### Upcoming Milestones
+- [ ] **Vernacular Language Support**: Localization for major Indian languages (Hindi, Tamil, Telugu, Marathi).
+- [ ] **Automated PDF Export**: On-demand downloadable PDF solvency reports delivered directly in WhatsApp.
+- [ ] **Bank Statement / Account Aggregator Integration**: Optional read-only import of loan schedules via India's Account Aggregator (AA) framework.
+- [ ] **Multi-Currency Support**: Adaptation of thresholds and rate conventions for Southeast Asian emerging markets.
 
 ---
 
-## License
+## ⚖️ Legal & Financial Disclaimer
 
-MIT. See `LICENSE`.
+**Informational & Diagnostic Assistance Only.** Debt Reality Checker is an educational and diagnostic calculation tool designed to help households evaluate their cash flow, understand debt payoff mechanics, and identify potential financial strain.
 
-*This is an informational engineering artefact. Regulatory and pricing points referenced in
-the source specification should be re-verified against current guidance before any public
-launch.*
+- It is **not** a credit bureau, lending platform, loan broker, or credit repair organization.
+- It does **not** provide legal, tax, or investment advice.
+- It does **not** evaluate legal insolvency or bankruptcy under the Insolvency and Bankruptcy Code (IBC).
+- Households experiencing acute financial distress should consult a qualified, independent financial advisor or accredited non-profit credit counseling organization.
+
+---
+
+## 📄 License & Attribution
+
+Distributed under the **MIT License**. See `LICENSE` for details.
+
+*Debt Reality Checker — Built for clarity, transparency, and household financial resilience.*

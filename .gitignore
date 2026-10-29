@@ -12,6 +12,7 @@ auth_info_baileys/
 .vitest-tmp/
 .workbuddy-ai/
 .aistudio/
+public/assets/aistudio/
 bun.lock
 .DS_Store
 *.log
