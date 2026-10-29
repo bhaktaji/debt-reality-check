@@ -32,14 +32,28 @@ export function purgeInactive(db, days = DEFAULT_RETENTION_DAYS) {
     .all(cutoff)
     .map((r) => r.id);
 
-  if (!stale.length) return { users: 0, events: 0 };
+  let webhooks = 0;
+  try {
+    webhooks = db
+      .prepare("DELETE FROM processed_webhooks WHERE received_at < datetime('now', ?)")
+      .run(cutoff).changes;
+  } catch {
+    /* table may not exist in older unmigrated test fixtures */
+  }
+
+  if (!stale.length) return { users: 0, events: 0, webhooks };
 
   let events = 0;
   for (const id of stale) {
     events += db.prepare('DELETE FROM events WHERE user_id = ?').run(id).changes;
+    try {
+      webhooks += db.prepare('DELETE FROM processed_webhooks WHERE user_id = ?').run(id).changes;
+    } catch {
+      /* ignore if table absent */
+    }
     db.prepare('DELETE FROM users WHERE id = ?').run(id); // cascades
   }
-  return { users: stale.length, events };
+  return { users: stale.length, events, webhooks };
 }
 
 /**
@@ -49,6 +63,11 @@ export function deleteAllFor(db, userId) {
   const counts = {};
   for (const table of ['expenses', 'debts', 'audits', 'consent', 'events']) {
     counts[table] = db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).run(userId).changes;
+  }
+  try {
+    counts.webhooks = db.prepare('DELETE FROM processed_webhooks WHERE user_id = ?').run(userId).changes;
+  } catch {
+    counts.webhooks = 0;
   }
   counts.users = db.prepare('DELETE FROM users WHERE id = ?').run(userId).changes;
   return counts;

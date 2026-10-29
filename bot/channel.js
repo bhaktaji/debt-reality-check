@@ -115,7 +115,7 @@ export async function createChannel({ channel, store, config = {} } = {}) {
     }
     case 'cloud': {
       const { CloudApiChannel } = await import('./whatsapp_cloud.js');
-      return { channel: new CloudApiChannel({ router, config }), router };
+      return { channel: new CloudApiChannel({ router, store, config }), router };
     }
     default:
       throw new Error(`Unknown channel "${channel}". Use console, baileys or cloud.`);

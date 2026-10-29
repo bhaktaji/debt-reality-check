@@ -427,6 +427,27 @@ function makeStore(ctx) {
       deleteAllFor: (userId) => deleteAllFor(db, userId),
     },
 
+    /** Persistent webhook deduplication for official WhatsApp Cloud API deliveries. */
+    webhooks: {
+      /**
+       * Record a webhook message ID atomically. Returns true if newly recorded,
+       * false if already processed.
+       */
+      claim(messageId, userId = null) {
+        if (!messageId) return true;
+        const r = db.prepare(
+          'INSERT OR IGNORE INTO processed_webhooks (message_id, user_id) VALUES (?, ?)',
+        ).run(String(messageId), userId ? String(userId) : null);
+        return r.changes === 1;
+      },
+      has(messageId) {
+        if (!messageId) return false;
+        const r = db.prepare('SELECT 1 AS c FROM processed_webhooks WHERE message_id = ?').get(String(messageId));
+        return Boolean(r);
+      },
+      count: () => db.prepare('SELECT COUNT(*) AS c FROM processed_webhooks').get()?.c ?? 0,
+    },
+
     /** Raw SQL helper for CLI/reporting. */
     query: (sql, ...args) => db.prepare(sql).all(...args),
 

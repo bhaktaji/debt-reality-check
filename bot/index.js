@@ -58,6 +58,11 @@ export async function main(argv = process.argv.slice(2)) {
     );
   }
 
+  if (channelName === 'cloud' && process.env.NODE_ENV === 'production') {
+    const { CloudApiChannel } = await import('./whatsapp_cloud.js');
+    CloudApiChannel.assertProductionConfig(process.env);
+  }
+
   const store = openDatabase({});
   process.stdout.write(`Storage: ${store.driver} on Node ${process.version}\n`);
 
@@ -71,7 +76,20 @@ export async function main(argv = process.argv.slice(2)) {
 
   const { channel } = await createChannel({ channel: channelName, store, config: { retentionDays } });
 
+  // Run periodic retention sweep every 6 hours so long-lived production servers do not
+  // depend on restarts to enforce data retention TTL.
+  const retentionIntervalMs = Number(process.env.DRC_RETENTION_INTERVAL_MS || 6 * 60 * 60 * 1000);
+  const retentionTimer = setInterval(() => {
+    try {
+      store.retention.purgeInactive(retentionDays);
+    } catch {
+      /* ignore background sweep errors */
+    }
+  }, retentionIntervalMs);
+  retentionTimer.unref?.();
+
   const shutdown = async () => {
+    clearInterval(retentionTimer);
     await channel.stop();
     store.close();
     process.exit(0);
@@ -80,7 +98,7 @@ export async function main(argv = process.argv.slice(2)) {
   process.on('SIGTERM', shutdown);
 
   await channel.start();
-  return { channel, store };
+  return { channel, store, stop: async () => { clearInterval(retentionTimer); await channel.stop(); store.close(); } };
 }
 
 if (isMainModule(import.meta.url)) {

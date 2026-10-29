@@ -104,7 +104,7 @@ describe('the built-in driver runs the whole lifecycle', () => {
   it('migrates, stores and reads back an integer-paise profile', () => {
     const store = openDatabase({ path: ':memory:', secret: SECRET, env: builtIn });
     expect(store.driver).toBe('node:sqlite');
-    expect(store.schemaVersion()).toBe(1);
+    expect(store.schemaVersion()).toBe(2);
 
     const profile = ARCHETYPE_BY_ID.B.profile;
     const uid = store.pseudonymise('driver:B');

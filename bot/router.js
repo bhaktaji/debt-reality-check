@@ -134,6 +134,12 @@ export function createRouter({ store, config = {} }) {
   }
 
   function advance(state) {
+    // If editing a single field (editReturn === true), jump directly back to confirm
+    // (unless we are in the middle of household earners -> dependents -> familyHelp).
+    if (state.editReturn && state.step !== 'earners' && state.step !== 'dependents') {
+      const next = { ...state, step: 'confirm', pending: null, editReturn: false, debt: null };
+      return { replies: [M.AUDIT_SUMMARY_INTRO, summariseDraft(next.draft)], state: next };
+    }
     const idx = FLOW.indexOf(state.step);
     const nextStep = FLOW[idx + 1] ?? 'confirm';
     const next = { ...state, step: nextStep, pending: null };
@@ -179,6 +185,36 @@ export function createRouter({ store, config = {} }) {
 
     const next = { ...freshState() };
     return { replies: [toTextReport(report)], state: next };
+  }
+
+  function startEditField(uid, targetStep, state) {
+    const existing = profileFromStore(store.users.get(uid), store.debts.list(uid));
+    const baseDraft = state.draft && state.draft.netIncome != null
+      ? state.draft
+      : existing && existing.netIncome != null
+        ? freshDraft(existing)
+        : null;
+    if (!baseDraft) {
+      return startAudit(uid);
+    }
+    const draft = { ...baseDraft };
+    if (targetStep === 'debts') {
+      draft.debts = [];
+    }
+    const next = {
+      ...state,
+      mode: 'audit',
+      step: targetStep,
+      draft,
+      pending: null,
+      editReturn: true,
+      debt: targetStep === 'debts' ? { field: 'name', draft: {} } : null,
+      history: [...(state.history || []).slice(-20), snapshotForBack(state)],
+    };
+    const replies = targetStep === 'debts'
+      ? [M.AUDIT_QUESTIONS.debtIntro, M.AUDIT_QUESTIONS.debtName]
+      : [askStep(targetStep)];
+    return { replies, state: next };
   }
 
   function handleAuditAnswer(uid, text, state) {
@@ -247,8 +283,10 @@ export function createRouter({ store, config = {} }) {
         return handleDebtAnswer(text, state);
 
       case 'confirm': {
-        if (/^\s*done\s*$/i.test(text)) return finishAudit(uid, state);
-        return { replies: ['Send DONE to run the diagnostic, or BACK to change an answer.'], state };
+        if (/^\s*(done|yes|confirm)\s*$/i.test(text)) return finishAudit(uid, state);
+        const editField = parseEditField(text);
+        if (editField) return startEditField(uid, editField, state);
+        return { replies: ['Send DONE to run the diagnostic, BACK to change the last answer, or EDIT <field> (e.g. EDIT INCOME, EDIT RENT).'], state };
       }
 
       default:
@@ -263,6 +301,9 @@ export function createRouter({ store, config = {} }) {
     switch (debt.field) {
       case 'name': {
         if (!t) return { replies: [M.AUDIT_QUESTIONS.debtName], state };
+        if ((state.draft?.debts?.length ?? 0) === 0 && /^\s*(done|no|nope|none|nil|0|no debts|debt free)\s*$/i.test(t)) {
+          return advance({ ...state, debt: null, step: 'debts' });
+        }
         const next = { ...state, debt: { field: 'type', draft: { ...debt.draft, name: t.slice(0, 40) } } };
         return { replies: [M.AUDIT_QUESTIONS.debtType], state: next };
       }
@@ -396,11 +437,20 @@ export function createRouter({ store, config = {} }) {
   }
 
   /* ------------------------------------------------------------------ *
-   * Commands
+   * Commands & Follow-ups
    * ------------------------------------------------------------------ */
 
   function handleCommand(uid, upper, text, state) {
+    if (upper === '__UNSUPPORTED_MEDIA__') {
+      return { replies: [M.UNSUPPORTED_MESSAGE_TYPE], state };
+    }
     if (upper === 'HELP' || upper === '?') return { replies: [M.HELP], state };
+    if (upper === 'HI' || upper === 'HELLO' || upper === 'HEY' || upper === 'START' || upper === 'NAMASTE') {
+      if (state.mode === 'audit') {
+        return { replies: [`You have an audit in progress. ${askStep(state.step)}`], state };
+      }
+      return { replies: [M.HELP], state };
+    }
     if (upper === 'AGREE') {
       store.consent.record(uid, { noticeVersion: M.NOTICE_VERSION, purpose: 'solvency diagnostic and expense log', retentionDays });
       store.events.log(uid, 'CONSENT_RECORDED');
@@ -408,11 +458,29 @@ export function createRouter({ store, config = {} }) {
     }
     if (upper === 'DELETE MY DATA' || upper === 'DELETE-MY-DATA' || upper === 'DELETE_DATA') {
       store.retention.deleteAllFor(uid);
-      return { replies: [M.DELETE_ACK], state: freshState() };
+      return { replies: [M.DELETE_ACK], state: freshState(), erased: true };
     }
-    if (upper === 'CANCEL') {
+    if (upper === 'CANCEL' || upper === 'STOP' || upper === 'ABORT') {
       store.events.log(uid, 'FLOW_CANCELLED');
-      return { replies: [M.CANCEL_ACK], state: freshState() };
+      const pausedDraft = state.draft || null;
+      const pausedStep = state.mode === 'audit' ? state.step : null;
+      return { replies: [M.CANCEL_ACK], state: { ...freshState(), pausedDraft, pausedStep } };
+    }
+    if (upper === 'RESUME' || upper === 'CONTINUE') {
+      if (state.mode === 'audit' && state.step) {
+        return { replies: [askStep(state.step)], state };
+      }
+      if (state.pausedDraft && state.pausedStep) {
+        const resumed = {
+          ...freshState(),
+          mode: 'audit',
+          step: state.pausedStep,
+          draft: state.pausedDraft,
+          debt: state.pausedStep === 'debts' ? { field: 'name', draft: {} } : null,
+        };
+        return { replies: [`Resuming your audit.`, askStep(resumed.step)], state: resumed };
+      }
+      return { replies: [M.RESUME_NONE], state };
     }
     if (upper === 'BACK') {
       if (!state.history?.length) return { replies: [M.NO_BACK], state };
@@ -420,6 +488,13 @@ export function createRouter({ store, config = {} }) {
       const prev = history.pop();
       const restored = { ...freshState(), ...prev, history };
       return { replies: [M.BACK_ACK, askStep(restored.step) || ''].filter(Boolean), state: restored };
+    }
+    if (upper.startsWith('EDIT')) {
+      const rest = upper.replace(/^EDIT\s*/, '').trim();
+      if (!rest) return { replies: [M.EDIT_PROMPT], state };
+      const field = parseEditField(text);
+      if (!field) return { replies: [M.EDIT_PROMPT], state };
+      return startEditField(uid, field, state);
     }
     if (upper.startsWith('SET CURRENCY')) {
       const code = upper.replace('SET CURRENCY', '').trim();
@@ -430,8 +505,68 @@ export function createRouter({ store, config = {} }) {
     if (upper === 'SUMMARY') return { replies: [summaryText(uid)], state };
     if (upper === 'HISTORY') return { replies: [historyText(uid)], state };
     if (upper === 'REPORT') return { replies: [reportText(uid)], state };
-    if (upper === 'AUDIT') return startAudit(uid);
+    if (upper === 'AUDIT' || upper === 'RESTART' || upper === 'START AUDIT') return startAudit(uid);
     if (upper === 'HARASSMENT') return { replies: [M.HARASSMENT_GUIDANCE], state };
+
+    // Follow-up questions about the user's completed audit result (deterministic from core)
+    const followUp = handleFollowUpQuestion(uid, upper, text);
+    if (followUp) return { replies: [followUp], state };
+
+    return null;
+  }
+
+  function handleFollowUpQuestion(uid, upper, text) {
+    const isWhy = /^(WHY|EXPLAIN|DRIVERS|WHAT DOES MY TIER MEAN|WHY TIER)\b/i.test(text);
+    const isStrategy = /^(STRATEGY|PAYOFF|AVALANCHE|SNOWBALL|COMPARE|WHICH DEBT FIRST)\b/i.test(text);
+    const isNextSteps = /^(NEXT|NEXT STEPS|ACTIONS|WHAT NEXT|WHAT SHOULD I DO|IMPROVE)\b/i.test(text);
+    if (!isWhy && !isStrategy && !isNextSteps) return null;
+
+    const profile = profileFromStore(store.users.get(uid), store.debts.list(uid));
+    if (!profile || profile.netIncome == null) return M.REPORT_NEEDS_AUDIT;
+    const diagnostic = diagnoseProfile(profile);
+    if (!diagnostic.ok) return diagnostic.message;
+    const report = buildReport(diagnostic, { profile });
+    const n = report.narrative;
+
+    if (isWhy) {
+      const lines = [
+        `${n.plainTier.says} (Tier ${report.tier} of 4: ${report.tierLabel})`,
+        n.plainTier.means,
+        '',
+        ...n.whatItMeans.map((s) => `- ${s}`),
+      ];
+      if (n.pressurePoints.length) {
+        lines.push('', 'Main drivers:', ...n.pressurePoints.map((p) => `- ${p.title}: ${p.body}`));
+      }
+      if (n.improvement.applicable) {
+        lines.push('', 'How to improve:', ...n.improvement.sentences.map((s) => `- ${s}`));
+      }
+      return lines.join('\n');
+    }
+
+    if (isStrategy) {
+      const lines = ['YOUR DEBT PAYOFF PLAN'];
+      if (n.payoff.feasible) {
+        lines.push(n.payoff.intro);
+        lines.push(`- Option 1 (${n.payoff.optionA.name}): ${n.payoff.optionA.text}`);
+        lines.push(`- Option 2 (${n.payoff.optionB.name}): ${n.payoff.optionB.text}`);
+        lines.push(n.payoff.differenceText);
+        lines.push(n.payoff.suggestion);
+      } else {
+        lines.push(n.payoff.intro, n.payoff.detail, n.payoff.nextStep);
+      }
+      return lines.join('\n');
+    }
+
+    if (isNextSteps) {
+      const lines = ['WHAT I WOULD FOCUS ON NEXT'];
+      n.actions.forEach((a, i) => lines.push(`${i + 1}. ${a.title} - ${a.body}`));
+      if (n.improvement.applicable) {
+        lines.push('', ...n.improvement.sentences);
+      }
+      return lines.join('\n');
+    }
+
     return null;
   }
 
@@ -487,21 +622,28 @@ export function createRouter({ store, config = {} }) {
 
   function handle(rawId, text) {
     const uid = store.pseudonymise(rawId);
-    store.users.ensure(uid);
-
     const body = String(text ?? '').trim();
     const upper = body.toUpperCase();
+
+    // Handle DELETE MY DATA immediately without re-creating a user row afterwards.
+    if (upper === 'DELETE MY DATA' || upper === 'DELETE-MY-DATA' || upper === 'DELETE_DATA') {
+      store.retention.deleteAllFor(uid);
+      return { replies: [M.DELETE_ACK], state: freshState() };
+    }
+
+    store.users.ensure(uid);
 
     // Crisis always wins, and stops the flow (F.3).
     if (M.isCrisisMessage(body)) {
       store.events.log(uid, 'CRISIS_ESCALATION');
+      saveState(uid, freshState());
       return { replies: [M.CRISIS_REPLY], state: freshState(), escalated: true };
     }
 
     const state = getState(uid);
 
     // First contact: consent notice before anything else (except HELP / DELETE).
-    if (!store.consent.hasConsent(uid) && !['AGREE', 'HELP', '?', 'DELETE MY DATA'].includes(upper)) {
+    if (!store.consent.hasConsent(uid) && !['AGREE', 'HELP', '?'].includes(upper)) {
       const out = { replies: [M.FIRST_CONTACT], state };
       saveState(uid, state);
       return out;
@@ -511,7 +653,7 @@ export function createRouter({ store, config = {} }) {
     const cmd = handleCommand(uid, upper, body, state);
     if (cmd) {
       if (M.isHarassmentMessage(body)) cmd.replies.push('', M.HARASSMENT_GUIDANCE);
-      saveState(uid, cmd.state);
+      if (!cmd.erased) saveState(uid, cmd.state);
       return cmd;
     }
 
@@ -564,6 +706,20 @@ export function createRouter({ store, config = {} }) {
 }
 
 /* -------------------------------------------------------------------- */
+
+function parseEditField(text) {
+  const s = String(text ?? '').trim().toLowerCase().replace(/^edit\s+/, '').trim();
+  if (['income', 'net income', 'take home', 'salary', 'q1'].includes(s)) return 'netIncome';
+  if (['history', 'income history', 'q2'].includes(s)) return 'incomeHistory';
+  if (['rent', 'housing', 'q3'].includes(s)) return 'rent';
+  if (['costs', 'core', 'core costs', 'expenses', 'core expenses', 'essentials', 'q4'].includes(s)) return 'coreExpenses';
+  if (['reserves', 'savings', 'buffer', 'cash', 'liquid reserves', 'q5'].includes(s)) return 'liquidReserves';
+  if (['earners', 'household', 'q6'].includes(s)) return 'earners';
+  if (['dependents', 'q7'].includes(s)) return 'dependents';
+  if (['family', 'family help', 'help', 'q8'].includes(s)) return 'familyHelp';
+  if (['debts', 'debt', 'loans', 'cards'].includes(s)) return 'debts';
+  return null;
+}
 
 function cap(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);

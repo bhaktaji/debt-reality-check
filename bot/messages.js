@@ -166,11 +166,20 @@ export const AUDIT_SUMMARY_INTRO = 'Here is what I have. Send DONE to run the di
 
 export const AUDIT_ABORTED = 'Audit cancelled.';
 
+export const UNSUPPORTED_MESSAGE_TYPE =
+  'I can only read text messages right now. Please type your amount or command (send HELP for options).';
+
+export const RESUME_NONE =
+  'There is no unfinished audit to resume. Send AUDIT to start a solvency check, or REPORT to view your last result.';
+
+export const EDIT_PROMPT =
+  'To change a specific answer, send EDIT INCOME, EDIT RENT, EDIT COSTS, EDIT RESERVES, EDIT HOUSEHOLD or EDIT DEBTS (or send AUDIT to start fresh).';
+
 export default {
   NOTICE_VERSION, DISCLAIMER_SHORT, FIRST_CONTACT, CONSENT_ACK, HELP, CANCEL_ACK, BACK_ACK, NO_BACK,
   EXPENSE_LOGGED, EXPENSE_ASK_ESSENTIAL, EXPENSE_ASK_AMOUNT, EXPENSE_CONFIRM, NO_EXPENSE,
   SUMMARY_HEADER, NO_EXPENSES, REPORT_NEEDS_AUDIT, DELETE_ACK, SET_CURRENCY_ACK,
   SET_CURRENCY_UNSUPPORTED, AGREE_PROMPT, CRISIS_REPLY, HARASSMENT_GUIDANCE, AUDIT_INTRO,
-  AUDIT_QUESTIONS, AUDIT_SUMMARY_INTRO, AUDIT_ABORTED,
+  AUDIT_QUESTIONS, AUDIT_SUMMARY_INTRO, AUDIT_ABORTED, UNSUPPORTED_MESSAGE_TYPE, RESUME_NONE, EDIT_PROMPT,
   isCrisisMessage, isHarassmentMessage,
 };

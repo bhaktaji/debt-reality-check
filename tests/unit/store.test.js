@@ -24,8 +24,8 @@ afterEach(() => {
 
 describe('schema and pragmas (F-20)', () => {
   it('applies migrations once and reports the version', () => {
-    expect(store.migrationsApplied).toEqual([1]);
-    expect(store.schemaVersion()).toBe(1);
+    expect(store.migrationsApplied).toEqual([1, 2]);
+    expect(store.schemaVersion()).toBe(2);
     // Re-opening must not re-apply.
     const again = openDatabase({ path: join(dir, 'test.sqlite'), secret: SECRET });
     expect(again.migrationsApplied).toEqual([]);

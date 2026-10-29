@@ -93,6 +93,22 @@ export const MIGRATIONS = [
       `);
     },
   },
+  {
+    version: 2,
+    name: 'webhook idempotency',
+    up: (db) => {
+      db.exec(`
+        -- Deduplication table for WhatsApp Cloud API webhook deliveries.
+        -- Stores only opaque message_id and pseudonymised user_id (no raw phone or body).
+        CREATE TABLE IF NOT EXISTS processed_webhooks (
+          message_id  TEXT PRIMARY KEY,
+          user_id     TEXT,
+          received_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_webhooks_time ON processed_webhooks(received_at);
+      `);
+    },
+  },
 ];
 
 /** Create the migrations bookkeeping table. */
