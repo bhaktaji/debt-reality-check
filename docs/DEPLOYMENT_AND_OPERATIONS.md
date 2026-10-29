@@ -191,3 +191,49 @@ Even with strong technical privacy controls (`HMAC-SHA256` pseudonymisation, no 
 - [ ] **Publish a Privacy Notice & Terms of Use URL** on your WhatsApp Business Profile and website naming the Data Fiduciary, the purpose of processing, the 90-day retention period, and the contact details of your Grievance Officer.
 - [ ] **Verify Non-Advisory / Non-Lending Boundaries (SEBI / RBI)**: Ensure no product copy recommends securities, Mutual Funds, or insurance products, and ensure no loan brokering, credit bureau pull, or debt-settlement negotiation service is bundled without appropriate regulatory registration.
 - [ ] **Complete Meta Business Verification**: Required by Meta to move the WhatsApp Business Account from Sandbox/Test mode to public production messaging tiers.
+
+---
+
+## 9. GitHub Personal Access Token Expiry & Rotation Procedure
+
+To authorize Git operations (`push`, `pull`, `fetch`, and repository synchronization) with GitHub without relying on interactive prompts, a GitHub Personal Access Token (fine-grained PAT) is used.
+
+### Security & Storage Invariants
+- **Never committed**: The token must never appear in `git log`, source code, `README.md`, or any committed file.
+- **Git-ignored storage**: The token is stored strictly in the local, Git-ignored environment (`.env` as `GITHUB_TOKEN=...`, mode `0600`) and the local Git credential helper cache (`.git/credentials`, mode `0600`, which resides inside Git's internal metadata directory and is never tracked).
+- **Zero logging**: Automated scripts and server processes must sanitize error outputs to prevent credential leakage.
+
+### Token Expiry Schedule
+- **Token Validity**: 90 days (3 months) from issuance.
+- **Current Token Expiration**: Late January 2027.
+- **Required Permissions**: Read and write repository access for `Contents` (`repo` scope or fine-grained repository permissions for `bhaktaji/debt-reality-check`).
+
+### Quarterly Rotation Procedure
+When GitHub sends an expiration warning email or when the token reaches its 90-day threshold:
+
+1. **Generate a Fresh Token on GitHub**:
+   - Navigate to **GitHub → Settings → Developer Settings → Personal Access Tokens → Fine-grained tokens** (or Tokens classic).
+   - Click **Generate new token**.
+   - Set Name (e.g., `debt-reality-checker-sync`), choose an expiration (e.g., 90 days), and select Repository Access for `bhaktaji/debt-reality-check` with **Read and write** permissions for repository contents.
+   - Copy the newly generated token.
+
+2. **Update Local Git Credentials**:
+   ```bash
+   # Update the Git-ignored .env file
+   # Replace the existing GITHUB_TOKEN line in .env with your fresh token
+   chmod 600 .env
+
+   # Update the local git credentials file
+   echo "https://x-access-token:YOUR_NEW_TOKEN_HERE@github.com" > .git/credentials
+   chmod 600 .git/credentials
+   ```
+
+3. **Verify Authorized Access**:
+   ```bash
+   git ls-remote origin HEAD
+   # Verifies connectivity and authentication without printing the token
+   ```
+
+4. **Revoke the Previous Token**:
+   - In GitHub Settings, delete/revoke the expired token to complete the rotation cycle.
+

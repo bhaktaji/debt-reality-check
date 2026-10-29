@@ -205,18 +205,18 @@ flowchart TD
         Graph["Meta Graph API (v21.0)"]
     end
 
-    WebUser -->|HTTPS GET /| Static
-    WebUser -.->|Runs Algorithm v2 in Browser| Engine
-    WAUser -->|Inbound WhatsApp Message| Graph
-    Graph -->|Signed POST /webhook| CloudAPI
-    CloudAPI -->|HMAC-SHA256 Verification| CloudAPI
-    CloudAPI -->|Deduplicate Message ID| Dedup
-    CloudAPI -->|Dispatch User Message| Router
-    Router -->|Read / Write State| DB
-    Router -->|Pseudonymize Sender| Pseudo
-    Router -->|Execute Diagnostic| Engine
-    CloudAPI -->|Send Outbound Reply (Backoff/Retry)| Graph
-    Graph -->|Deliver Reply| WAUser
+    WebUser -->|"HTTPS GET /"| Static
+    WebUser -.->|"Runs Algorithm v2 in Browser"| Engine
+    WAUser -->|"Inbound WhatsApp Message"| Graph
+    Graph -->|"Signed POST /webhook"| CloudAPI
+    CloudAPI -->|"HMAC-SHA256 Verification"| CloudAPI
+    CloudAPI -->|"Deduplicate Message ID"| Dedup
+    CloudAPI -->|"Dispatch User Message"| Router
+    Router -->|"Read / Write State"| DB
+    Router -->|"Pseudonymize Sender"| Pseudo
+    Router -->|"Execute Diagnostic"| Engine
+    CloudAPI -->|"Send Outbound Reply (Backoff & Retry)"| Graph
+    Graph -->|"Deliver Reply"| WAUser
     HTTP --> Health
     HTTP --> Static
     HTTP --> CloudAPI
